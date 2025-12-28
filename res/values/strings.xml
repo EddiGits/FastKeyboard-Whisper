@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">FastKeyboard</string>
-    <string name="keyboard_name">Fast Keyboard</string>
+    <string name="app_name">VoiceKeyboard</string>
+    <string name="keyboard_name">Voice Keyboard</string>
 </resources>

@@ -5,11 +5,13 @@
     android:versionName="1.0">
 
     <uses-sdk
-        android:minSdkVersion="17"
+        android:minSdkVersion="26"
         android:targetSdkVersion="30" />
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
@@ -31,8 +33,16 @@
             android:exported="false"
             android:label="Settings" />
 
+        <activity android:name=".HistoryActivity"
+            android:exported="false"
+            android:label="History" />
+
+        <activity android:name=".TemplatesActivity"
+            android:exported="false"
+            android:label="Templates" />
+
         <service
-            android:name=".FastKeyboard"
+            android:name=".VoiceKeyboard"
             android:label="@string/keyboard_name"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:exported="true">

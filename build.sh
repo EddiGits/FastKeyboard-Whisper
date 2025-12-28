@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🚀 Building FastKeyboard APK..."
+echo "🚀 Building VoiceKeyboard APK..."
 start_time=$(date +%s)
 
 # Get current directory
@@ -39,9 +39,12 @@ $JAVA_HOME/bin/javac --release=8 \
   --class-path $dir/toolz/android.jar \
   src/com/fastkeyboard/MainActivity.java \
   src/com/fastkeyboard/SettingsActivity.java \
-  src/com/fastkeyboard/FastKeyboard.java \
+  src/com/fastkeyboard/HistoryActivity.java \
+  src/com/fastkeyboard/TemplatesActivity.java \
+  src/com/fastkeyboard/VoiceKeyboard.java \
   src/com/fastkeyboard/WhisperAPI.java \
   src/com/fastkeyboard/AudioRecorder.java \
+  src/com/fastkeyboard/ChatGPTAPI.java \
   build/com/fastkeyboard/R.java
 if [ $? -ne 0 ]; then
     echo "❌ Java compilation failed"
@@ -51,7 +54,8 @@ fi
 # Step 4: Convert to DEX
 echo "🔄 Creating DEX file..."
 cd build/classes
-dx --dex --output=../../classes.dex com/fastkeyboard/*.class
+# Use dx with min-sdk-version 26 for lambda support
+dx --dex --min-sdk-version=26 --output=../../classes.dex com/fastkeyboard/*.class
 if [ $? -ne 0 ]; then
     echo "❌ DEX creation failed"
     cd ../..
@@ -102,6 +106,6 @@ echo "  Then tap the notification to install"
 echo ""
 echo "After installing:"
 echo "  1. Go to Settings → System → Languages & input → On-screen keyboard"
-echo "  2. Enable 'Fast Keyboard'"
+echo "  2. Enable 'Voice Keyboard'"
 echo "  3. Tap any text field"
-echo "  4. Select Fast Keyboard from keyboard picker"
+echo "  4. Select Voice Keyboard from keyboard picker"

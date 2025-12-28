@@ -3,6 +3,9 @@ package com.fastkeyboard;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -10,12 +13,15 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import javax.net.ssl.HttpsURLConnection;
 
 public class WhisperAPI {
-    private static final String TAG = "FastKeyboard";
-    private static final String PREFS_NAME = "FastKeyboardPrefs";
+    private static final String TAG = "VoiceKeyboard";
+    private static final String PREFS_NAME = "VoiceKeyboardPrefs";
     private static final String KEY_API_URL = "whisper_api_url";
     private static final String KEY_API_KEY = "whisper_api_key";
+    private static final String KEY_TRANSCRIPTION_PROMPT = "transcription_prompt";
+    private static final String KEY_WHISPER_MODEL = "whisper_model";
 
     public interface TranscriptionCallback {
         void onSuccess(String transcription);
@@ -28,23 +34,70 @@ public class WhisperAPI {
             public void run() {
                 try {
                     Log.d(TAG, "WhisperAPI: Starting transcription");
+
+                    // Force IPv4
+                    System.setProperty("java.net.preferIPv4Stack", "true");
+                    System.setProperty("java.net.preferIPv6Addresses", "false");
+
                     SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
                     String apiUrl = prefs.getString(KEY_API_URL, "");
                     String apiKey = prefs.getString(KEY_API_KEY, "");
+                    String transcriptionPrompt = prefs.getString(KEY_TRANSCRIPTION_PROMPT, "");
+                    String whisperModel = prefs.getString(KEY_WHISPER_MODEL, "whisper-1");
 
-                    Log.d(TAG, "WhisperAPI: URL=" + (apiUrl.isEmpty() ? "EMPTY" : "SET") + ", Key=" + (apiKey.isEmpty() ? "EMPTY" : "SET"));
+                    Log.d(TAG, "WhisperAPI: Full URL=" + apiUrl);
+                    Log.d(TAG, "WhisperAPI: Key length=" + apiKey.length());
+                    Log.d(TAG, "WhisperAPI: Model=" + whisperModel);
 
                     if (apiUrl.isEmpty() || apiKey.isEmpty()) {
                         Log.e(TAG, "WhisperAPI: API not configured");
-                        callback.onError("API not configured. Please open FastKeyboard app and configure settings.");
+                        callback.onError("API not configured. Please open VoiceOverlay app and configure settings.");
                         return;
+                    }
+
+                    // Get active network and bind to it
+                    ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                    Network activeNetwork = null;
+
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        activeNetwork = cm.getActiveNetwork();
+                        if (activeNetwork != null) {
+                            Log.d(TAG, "WhisperAPI: Using active network: " + activeNetwork);
+                        } else {
+                            Log.e(TAG, "WhisperAPI: No active network found");
+                        }
+                    }
+
+                    // Try to resolve DNS manually with network binding
+                    try {
+                        java.net.InetAddress[] addresses;
+                        if (activeNetwork != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            addresses = activeNetwork.getAllByName("api.openai.com");
+                        } else {
+                            addresses = java.net.InetAddress.getAllByName("api.openai.com");
+                        }
+                        Log.d(TAG, "WhisperAPI: DNS resolved to " + addresses.length + " addresses");
+                        for (java.net.InetAddress addr : addresses) {
+                            Log.d(TAG, "WhisperAPI: Address: " + addr.getHostAddress());
+                        }
+                    } catch (Exception dnsEx) {
+                        Log.e(TAG, "WhisperAPI: DNS resolution failed: " + dnsEx.getMessage());
                     }
 
                     String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
                     String CRLF = "\r\n";
 
                     URL url = new URL(apiUrl);
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    HttpURLConnection conn;
+
+                    // Bind connection to active network
+                    if (activeNetwork != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        conn = (HttpURLConnection) activeNetwork.openConnection(url);
+                        Log.d(TAG, "WhisperAPI: Opened connection using active network");
+                    } else {
+                        conn = (HttpURLConnection) url.openConnection();
+                        Log.d(TAG, "WhisperAPI: Opened connection using default");
+                    }
                     conn.setDoOutput(true);
                     conn.setDoInput(true);
                     conn.setRequestMethod("POST");
@@ -58,13 +111,21 @@ public class WhisperAPI {
                     request.writeBytes("--" + boundary + CRLF);
                     request.writeBytes("Content-Disposition: form-data; name=\"model\"" + CRLF);
                     request.writeBytes(CRLF);
-                    request.writeBytes("whisper-1" + CRLF);
+                    request.writeBytes(whisperModel + CRLF);
 
                     // Add response_format parameter
                     request.writeBytes("--" + boundary + CRLF);
                     request.writeBytes("Content-Disposition: form-data; name=\"response_format\"" + CRLF);
                     request.writeBytes(CRLF);
                     request.writeBytes("json" + CRLF);
+
+                    // Add prompt parameter if provided
+                    if (!transcriptionPrompt.isEmpty()) {
+                        request.writeBytes("--" + boundary + CRLF);
+                        request.writeBytes("Content-Disposition: form-data; name=\"prompt\"" + CRLF);
+                        request.writeBytes(CRLF);
+                        request.writeBytes(transcriptionPrompt + CRLF);
+                    }
 
                     // Add file
                     request.writeBytes("--" + boundary + CRLF);
@@ -125,8 +186,9 @@ public class WhisperAPI {
                         callback.onError("HTTP Error " + responseCode + ": " + errorMsg);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "WhisperAPI: Exception", e);
-                    callback.onError("Error: " + e.getMessage());
+                    Log.e(TAG, "WhisperAPI: Exception - " + e.getClass().getName() + ": " + e.getMessage(), e);
+                    e.printStackTrace();
+                    callback.onError("Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
                 }
             }
         }).start();

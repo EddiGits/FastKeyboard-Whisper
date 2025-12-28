@@ -8,11 +8,30 @@ public class AudioRecorder {
     private MediaRecorder mediaRecorder;
     private File outputFile;
     private boolean isRecording = false;
+    private int sampleRate = 16000;
+    private int channels = 1;  // 1 = mono, 2 = stereo
+    private int bitRate = 128000;
 
     public interface RecordingCallback {
         void onRecordingStarted();
         void onRecordingStopped(File audioFile);
         void onError(String error);
+    }
+
+    public void setQuality(String quality) {
+        if (quality.equals("High")) {
+            sampleRate = 44100;
+            channels = 2;  // Stereo
+            bitRate = 256000;
+        } else if (quality.equals("Medium")) {
+            sampleRate = 22050;
+            channels = 1;  // Mono
+            bitRate = 192000;
+        } else {  // Low (default)
+            sampleRate = 16000;
+            channels = 1;  // Mono
+            bitRate = 128000;
+        }
     }
 
     public void startRecording(File outputDir, RecordingCallback callback) {
@@ -25,8 +44,9 @@ public class AudioRecorder {
             mediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             mediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            mediaRecorder.setAudioEncodingBitRate(128000);
-            mediaRecorder.setAudioSamplingRate(44100);
+            mediaRecorder.setAudioEncodingBitRate(bitRate);
+            mediaRecorder.setAudioSamplingRate(sampleRate);
+            mediaRecorder.setAudioChannels(channels);
             mediaRecorder.setOutputFile(outputFile.getAbsolutePath());
 
             mediaRecorder.prepare();
@@ -69,16 +89,14 @@ public class AudioRecorder {
         }
     }
 
-    public boolean isRecording() {
-        return isRecording;
-    }
-
     public void pauseRecording() {
         if (isRecording && mediaRecorder != null) {
             try {
-                mediaRecorder.pause();
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    mediaRecorder.pause();
+                }
             } catch (Exception e) {
-                // Ignore - pause not supported on all devices
+                // Ignore
             }
         }
     }
@@ -86,11 +104,32 @@ public class AudioRecorder {
     public void resumeRecording() {
         if (isRecording && mediaRecorder != null) {
             try {
-                mediaRecorder.resume();
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    mediaRecorder.resume();
+                }
             } catch (Exception e) {
-                // Ignore - resume not supported on all devices
+                // Ignore
             }
         }
+    }
+
+    public boolean isRecording() {
+        return isRecording;
+    }
+
+    public int getMaxAmplitude() {
+        if (mediaRecorder != null && isRecording) {
+            try {
+                return mediaRecorder.getMaxAmplitude();
+            } catch (Exception e) {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+    public File getOutputFile() {
+        return outputFile;
     }
 
     public void release() {
