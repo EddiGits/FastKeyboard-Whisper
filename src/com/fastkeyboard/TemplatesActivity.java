@@ -8,8 +8,10 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -26,31 +28,44 @@ public class TemplatesActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#1E1E1E"));
+        // Glassmorphism gradient background
+        GradientDrawable scrollBg = new GradientDrawable();
+        scrollBg.setColors(new int[]{
+            Color.parseColor("#1A1A2E"),
+            Color.parseColor("#16213E")
+        });
+        scrollBg.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        scrollBg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        scrollView.setBackground(scrollBg);
         scrollView.setFillViewport(true);
 
         LinearLayout mainLayout = new LinearLayout(this);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setPadding(24, 24, 24, 24);
-        mainLayout.setBackgroundColor(Color.parseColor("#1E1E1E"));
 
-        // Title
+        // Title with glow
         TextView title = new TextView(this);
         title.setText("📝 Templates");
         title.setTextSize(24);
         title.setTextColor(Color.WHITE);
         title.setPadding(0, 0, 0, 24);
         title.setGravity(Gravity.CENTER);
+        title.setShadowLayer(12, 0, 0, Color.parseColor("#66FFFFFF"));
         mainLayout.addView(title);
 
         // Add new template section
         final EditText nameInput = new EditText(this);
         nameInput.setHint("Template name (e.g., Greeting)");
         nameInput.setTextColor(Color.WHITE);
-        nameInput.setHintTextColor(Color.parseColor("#666666"));
-        nameInput.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        nameInput.setHintTextColor(Color.parseColor("#888888"));
         nameInput.setPadding(16, 16, 16, 16);
         nameInput.setSingleLine(true);
+        // Glassmorphism input field
+        GradientDrawable nameInputBg = new GradientDrawable();
+        nameInputBg.setColor(Color.parseColor("#33FFFFFF"));
+        nameInputBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        nameInputBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        nameInput.setBackground(nameInputBg);
         mainLayout.addView(nameInput);
 
         addVerticalSpace(mainLayout, 8);
@@ -58,11 +73,16 @@ public class TemplatesActivity extends Activity {
         final EditText textInput = new EditText(this);
         textInput.setHint("Template text (e.g., Hello! How are you?)");
         textInput.setTextColor(Color.WHITE);
-        textInput.setHintTextColor(Color.parseColor("#666666"));
-        textInput.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        textInput.setHintTextColor(Color.parseColor("#888888"));
         textInput.setPadding(16, 16, 16, 16);
         textInput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         textInput.setMinLines(3);
+        // Glassmorphism input field
+        GradientDrawable textInputBg = new GradientDrawable();
+        textInputBg.setColor(Color.parseColor("#33FFFFFF"));
+        textInputBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        textInputBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        textInput.setBackground(textInputBg);
         mainLayout.addView(textInput);
 
         addVerticalSpace(mainLayout, 12);
@@ -155,19 +175,26 @@ public class TemplatesActivity extends Activity {
     private void addTemplateCard(LinearLayout container, final String name, final String text, final int index) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackgroundColor(Color.parseColor("#2C2C2C"));
-        card.setPadding(16, 16, 16, 16);
+        card.setPadding(20, 20, 20, 20);
+        card.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Glassmorphism card with gradient
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor("#2C2C2C"));
-        drawable.setCornerRadius(8);
+        drawable.setColors(new int[]{
+            Color.parseColor("#CC2A2A4E"),
+            Color.parseColor("#CC1F1F3E")
+        });
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (16 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         card.setBackground(drawable);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        cardParams.setMargins(0, 0, 0, 12);
+        cardParams.setMargins(0, 0, 0, 16);
         card.setLayoutParams(cardParams);
 
         // Name
@@ -259,11 +286,37 @@ public class TemplatesActivity extends Activity {
         button.setTextColor(Color.WHITE);
         button.setTextSize(14);
         button.setPadding(24, 16, 24, 16);
+        button.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Gradient button background
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor(colorHex));
-        drawable.setCornerRadius(8);
+        int baseColor = Color.parseColor(colorHex);
+        int lighterColor = lightenColor(baseColor, 0.2f);
+        drawable.setColors(new int[]{lighterColor, baseColor});
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (12 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         button.setBackground(drawable);
+
+        // Add press animation
+        button.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                }
+                return false;
+            }
+        });
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -272,6 +325,18 @@ public class TemplatesActivity extends Activity {
         button.setLayoutParams(params);
 
         return button;
+    }
+
+    private int lightenColor(int color, float factor) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        red = Math.min(255, (int)(red + (255 - red) * factor));
+        green = Math.min(255, (int)(green + (255 - green) * factor));
+        blue = Math.min(255, (int)(blue + (255 - blue) * factor));
+
+        return Color.rgb(red, green, blue);
     }
 
     private void addSpace(LinearLayout parent, int dp) {

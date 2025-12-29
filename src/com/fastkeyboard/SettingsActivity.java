@@ -6,8 +6,10 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,23 +37,32 @@ public class SettingsActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Create main scrollable layout
+        // Create main scrollable layout with glassmorphism
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#1E1E1E"));
+
+        // Glassmorphism gradient background
+        GradientDrawable scrollBg = new GradientDrawable();
+        scrollBg.setColors(new int[]{
+            Color.parseColor("#1A1A2E"),
+            Color.parseColor("#16213E")
+        });
+        scrollBg.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        scrollBg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        scrollView.setBackground(scrollBg);
         scrollView.setFillViewport(true);
 
         LinearLayout mainLayout = new LinearLayout(this);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setPadding(24, 24, 24, 24);
-        mainLayout.setBackgroundColor(Color.parseColor("#1E1E1E"));
 
-        // Title
+        // Title with glow
         TextView title = new TextView(this);
         title.setText("⚙️ VoiceKeyboard Settings");
         title.setTextSize(24);
         title.setTextColor(Color.WHITE);
         title.setPadding(0, 0, 0, 24);
         title.setGravity(Gravity.CENTER);
+        title.setShadowLayer(12, 0, 0, Color.parseColor("#66FFFFFF"));
         mainLayout.addView(title);
 
         // API Settings Card
@@ -68,10 +79,17 @@ public class SettingsActivity extends Activity {
         urlInput.setHint("https://api.openai.com/v1/audio/transcriptions");
         urlInput.setTextSize(12);
         urlInput.setTextColor(Color.WHITE);
-        urlInput.setHintTextColor(Color.parseColor("#666666"));
-        urlInput.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        urlInput.setHintTextColor(Color.parseColor("#888888"));
         urlInput.setPadding(16, 16, 16, 16);
         urlInput.setSingleLine(true);
+
+        // Glassmorphism input field
+        GradientDrawable inputBg = new GradientDrawable();
+        inputBg.setColor(Color.parseColor("#33FFFFFF"));
+        inputBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        inputBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        urlInput.setBackground(inputBg);
+
         apiCard.addView(urlInput);
 
         addVerticalSpace(apiCard, 16);
@@ -87,10 +105,17 @@ public class SettingsActivity extends Activity {
         keyInput.setHint("sk-...");
         keyInput.setTextSize(12);
         keyInput.setTextColor(Color.WHITE);
-        keyInput.setHintTextColor(Color.parseColor("#666666"));
-        keyInput.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        keyInput.setHintTextColor(Color.parseColor("#888888"));
         keyInput.setPadding(16, 16, 16, 16);
         keyInput.setSingleLine(true);
+
+        // Glassmorphism input field
+        GradientDrawable keyInputBg = new GradientDrawable();
+        keyInputBg.setColor(Color.parseColor("#33FFFFFF"));
+        keyInputBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        keyInputBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        keyInput.setBackground(keyInputBg);
+
         apiCard.addView(keyInput);
 
         addVerticalSpace(apiCard, 16);
@@ -120,11 +145,18 @@ public class SettingsActivity extends Activity {
         transcriptionPromptInput.setHint("Punctuate and then grammatically correct and improve the given recorded audio");
         transcriptionPromptInput.setTextSize(12);
         transcriptionPromptInput.setTextColor(Color.WHITE);
-        transcriptionPromptInput.setHintTextColor(Color.parseColor("#666666"));
-        transcriptionPromptInput.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        transcriptionPromptInput.setHintTextColor(Color.parseColor("#888888"));
         transcriptionPromptInput.setPadding(16, 16, 16, 16);
         transcriptionPromptInput.setMinLines(3);
         transcriptionPromptInput.setMaxLines(5);
+
+        // Glassmorphism input field
+        GradientDrawable promptInputBg = new GradientDrawable();
+        promptInputBg.setColor(Color.parseColor("#33FFFFFF"));
+        promptInputBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        promptInputBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        transcriptionPromptInput.setBackground(promptInputBg);
+
         transcriptionCard.addView(transcriptionPromptInput);
 
         addVerticalSpace(transcriptionCard, 16);
@@ -253,12 +285,19 @@ public class SettingsActivity extends Activity {
     private LinearLayout createCard(String title) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setBackgroundColor(Color.parseColor("#252525"));
         card.setPadding(20, 20, 20, 20);
+        card.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Glassmorphism card with gradient
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor("#252525"));
-        drawable.setCornerRadius(12);
+        drawable.setColors(new int[]{
+            Color.parseColor("#CC2A2A4E"),
+            Color.parseColor("#CC1F1F3E")
+        });
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (16 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         card.setBackground(drawable);
 
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
@@ -273,6 +312,7 @@ public class SettingsActivity extends Activity {
         cardTitle.setTextSize(16);
         cardTitle.setTextColor(Color.WHITE);
         cardTitle.setPadding(0, 0, 0, 16);
+        cardTitle.setShadowLayer(8, 0, 0, Color.parseColor("#66FFFFFF"));
         card.addView(cardTitle);
 
         return card;
@@ -284,11 +324,37 @@ public class SettingsActivity extends Activity {
         button.setTextColor(Color.WHITE);
         button.setTextSize(14);
         button.setPadding(24, 16, 24, 16);
+        button.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Gradient button background
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor(colorHex));
-        drawable.setCornerRadius(8);
+        int baseColor = Color.parseColor(colorHex);
+        int lighterColor = lightenColor(baseColor, 0.2f);
+        drawable.setColors(new int[]{lighterColor, baseColor});
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (12 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         button.setBackground(drawable);
+
+        // Add press animation
+        button.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                }
+                return false;
+            }
+        });
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
@@ -297,6 +363,18 @@ public class SettingsActivity extends Activity {
         button.setLayoutParams(params);
 
         return button;
+    }
+
+    private int lightenColor(int color, float factor) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        red = Math.min(255, (int)(red + (255 - red) * factor));
+        green = Math.min(255, (int)(green + (255 - green) * factor));
+        blue = Math.min(255, (int)(blue + (255 - blue) * factor));
+
+        return Color.rgb(red, green, blue);
     }
 
     private Spinner createSpinner(String[] items) {

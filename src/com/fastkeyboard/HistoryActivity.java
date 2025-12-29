@@ -9,8 +9,10 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,32 +30,45 @@ public class HistoryActivity extends Activity {
 
         // Create main scrollable layout
         ScrollView scrollView = new ScrollView(this);
-        scrollView.setBackgroundColor(Color.parseColor("#1E1E1E"));
+        // Glassmorphism gradient background
+        GradientDrawable scrollBg = new GradientDrawable();
+        scrollBg.setColors(new int[]{
+            Color.parseColor("#1A1A2E"),
+            Color.parseColor("#16213E")
+        });
+        scrollBg.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        scrollBg.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        scrollView.setBackground(scrollBg);
         scrollView.setFillViewport(true);
 
         LinearLayout mainLayout = new LinearLayout(this);
         mainLayout.setOrientation(LinearLayout.VERTICAL);
         mainLayout.setPadding(24, 24, 24, 24);
-        mainLayout.setBackgroundColor(Color.parseColor("#1E1E1E"));
 
-        // Title
+        // Title with glow
         TextView title = new TextView(this);
         title.setText("📜 Recording History");
         title.setTextSize(24);
         title.setTextColor(Color.WHITE);
         title.setPadding(0, 0, 0, 24);
         title.setGravity(Gravity.CENTER);
+        title.setShadowLayer(12, 0, 0, Color.parseColor("#66FFFFFF"));
         mainLayout.addView(title);
 
-        // Search box
+        // Search box with glassmorphism
         final EditText searchBox = new EditText(this);
         searchBox.setHint("🔍 Search history...");
         searchBox.setTextColor(Color.WHITE);
-        searchBox.setHintTextColor(Color.parseColor("#666666"));
-        searchBox.setBackgroundColor(Color.parseColor("#2C2C2C"));
+        searchBox.setHintTextColor(Color.parseColor("#888888"));
         searchBox.setPadding(16, 16, 16, 16);
         searchBox.setTextSize(14);
         searchBox.setSingleLine(true);
+        // Glassmorphism input field
+        GradientDrawable searchBg = new GradientDrawable();
+        searchBg.setColor(Color.parseColor("#33FFFFFF"));
+        searchBg.setCornerRadius((int) (8 * getResources().getDisplayMetrics().density));
+        searchBg.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#55FFFFFF"));
+        searchBox.setBackground(searchBg);
         mainLayout.addView(searchBox);
 
         addVerticalSpace(mainLayout, 16);
@@ -167,19 +182,26 @@ public class HistoryActivity extends Activity {
     private void addHistoryEntry(LinearLayout container, String timestamp, final String text, final int index) {
         LinearLayout entryLayout = new LinearLayout(this);
         entryLayout.setOrientation(LinearLayout.VERTICAL);
-        entryLayout.setBackgroundColor(Color.parseColor("#2C2C2C"));
-        entryLayout.setPadding(16, 16, 16, 16);
+        entryLayout.setPadding(20, 20, 20, 20);
+        entryLayout.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Glassmorphism card with gradient
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor("#2C2C2C"));
-        drawable.setCornerRadius(8);
+        drawable.setColors(new int[]{
+            Color.parseColor("#CC2A2A4E"),
+            Color.parseColor("#CC1F1F3E")
+        });
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (16 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         entryLayout.setBackground(drawable);
 
         LinearLayout.LayoutParams entryParams = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         );
-        entryParams.setMargins(0, 0, 0, 12);
+        entryParams.setMargins(0, 0, 0, 16);
         entryLayout.setLayoutParams(entryParams);
 
         // Timestamp
@@ -311,11 +333,37 @@ public class HistoryActivity extends Activity {
         button.setTextColor(Color.WHITE);
         button.setTextSize(14);
         button.setPadding(24, 16, 24, 16);
+        button.setElevation((int) (4 * getResources().getDisplayMetrics().density));
 
+        // Gradient button background
         GradientDrawable drawable = new GradientDrawable();
-        drawable.setColor(Color.parseColor(colorHex));
-        drawable.setCornerRadius(8);
+        int baseColor = Color.parseColor(colorHex);
+        int lighterColor = lightenColor(baseColor, 0.2f);
+        drawable.setColors(new int[]{lighterColor, baseColor});
+        drawable.setGradientType(GradientDrawable.LINEAR_GRADIENT);
+        drawable.setOrientation(GradientDrawable.Orientation.TOP_BOTTOM);
+        drawable.setCornerRadius((int) (12 * getResources().getDisplayMetrics().density));
+        drawable.setStroke((int) (1 * getResources().getDisplayMetrics().density), Color.parseColor("#44FFFFFF"));
         button.setBackground(drawable);
+
+        // Add press animation
+        button.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        v.animate().scaleX(1.0f).scaleY(1.0f).setDuration(100)
+                            .setInterpolator(new AccelerateDecelerateInterpolator()).start();
+                        break;
+                }
+                return false;
+            }
+        });
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -324,6 +372,18 @@ public class HistoryActivity extends Activity {
         button.setLayoutParams(params);
 
         return button;
+    }
+
+    private int lightenColor(int color, float factor) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+
+        red = Math.min(255, (int)(red + (255 - red) * factor));
+        green = Math.min(255, (int)(green + (255 - green) * factor));
+        blue = Math.min(255, (int)(blue + (255 - blue) * factor));
+
+        return Color.rgb(red, green, blue);
     }
 
     private void addSpace(LinearLayout parent, int dp) {
